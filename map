@@ -1,0 +1,76 @@
+'use strict'        // let the browser know we're serious
+
+// debug statement letting us know the file is loaded
+console.log('Loaded map.js')
+
+// your mapbox token
+mapboxgl.accessToken = 'pk.eyJ1IjoienVza29jeiIsImEiOiJja2lqMnpmZ2EwYWc0MnNteHl2NnN0YW1uIn0.LxLf_Lw4fsPMgMaiWf-Slg' +
+
+
+let map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/zuskocz/ckjk72rzd1bhw19tpx8560m6a',
+    center: [-73.96216,40.80779],
+    zoom: 16, // początkowy poziom przybliżenia mapy, jeśli nie określony to 0
+})
+
+
+// create an instance of NavigationControl
+let navigation = new mapboxgl.NavigationControl({
+    showCompass: true,
+    visualizePitch: true
+})
+
+// add the navigation to map
+map.addControl(navigation, 'top-left')
+
+// create an instance of ScaleControl
+let scale = new mapboxgl.ScaleControl({
+    maxWidth: 80,
+    unit: 'metric'
+})
+// add the scale to your map
+map.addControl(scale, 'bottom-right')
+
+let geolocate = new mapboxgl.GeolocateControl({
+    positionOptions: {
+        enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserLocation: true,
+    fitBoundsOptions: {
+    }
+})
+
+map.addControl(geolocate, 'top-left')
+
+map.on('click', function(event) {
+    let features = map.queryRenderedFeatures({ layers: ['rat-sightings'] })
+    console.log(features)
+
+    let current_location = [event.lngLat.lng, event.lngLat.lat]
+    console.log(current_location)
+
+    if(features.length === 0) return
+
+    let closest_distance = Infinity
+    let closest_feature = null
+
+    for (let feature of features) {
+
+        let distance = turf.distance(turf.point(feature.geometry.coordinates), turf.point(current_location))
+        if (distance < closest_distance) {
+            closest_distance = distance
+            closest_feature = feature
+        }
+
+    }
+
+    console.log("Closest feature:", closest_feature.geometry.coordinates, "(", closest_distance, "m)")
+
+    let bearing = turf.bearing(turf.point(current_location), turf.poin(closest_feature.geometry.coordinates))
+    console.log(bearing)
+    
+
+})
+
